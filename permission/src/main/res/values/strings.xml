@@ -1,0 +1,21 @@
+<resources>
+    <string name="app_name">permisions</string>
+
+    <string name="ok">确认</string>
+    <string name="cancel">取消</string>
+    <string name="setting">设置</string>
+    <string name="permissions_dialog_title">权限申请</string>
+    <string name="permissions_calendar">日历</string>
+    <string name="permissions_camera">相机</string>
+    <string name="permissions_record_audio">麦克风</string>
+    <string name="permissions_contract">通信录</string>
+    <string name="permissions_call">拨打电话</string>
+    <string name="permissions_call_log">通话记录</string>
+    <string name="permissions_read_phone_status">手机信息</string>
+    <string name="permissions_sensors">传感器</string>
+    <string name="permissions_sms">短信</string>
+    <string name="permissions_location">定位</string>
+    <string name="permissions_external_storage">外部存储</string>
+    <string name="permissions_dialog_info_message">该功能需申请%s权限</string>
+    <string name="permissions_dialog_neverask_message">该功能需%s权限，请在设置里开启</string>
+</resources>
