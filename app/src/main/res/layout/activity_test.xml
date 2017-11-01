@@ -13,26 +13,29 @@
         android:gravity="center"
         android:padding="5dp"
         android:text="Record"
+        android:onClick="record"
         android:textSize="30sp" />
 
     <TextView
-        android:id="@+id/call"
+        android:id="@+id/contacts"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@android:color/holo_blue_light"
         android:gravity="center"
         android:padding="5dp"
-        android:text="Call"
+        android:onClick="contacts"
+        android:text="Contacts"
         android:textSize="30sp" />
 
     <TextView
-        android:id="@+id/other"
+        android:id="@+id/location"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@android:color/darker_gray"
         android:gravity="center"
         android:padding="5dp"
-        android:text="Other"
+        android:text="Location"
+        android:onClick="location"
         android:textSize="30sp" />
 
 
