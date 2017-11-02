@@ -15,8 +15,6 @@ allprojects {
     repositories {
         google()
         jcenter()
-        maven {url 'https://raw.githubusercontent.com/buptlzx-maven/maven/master/AndroidPermission'}
-//        maven {url "file:///Users/bytedance/LocalMaven/AndroidPermission"}
     }
 }
 

@@ -4,6 +4,8 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.FragmentManager;
 import android.content.DialogInterface;
+import android.os.Handler;
+import android.os.Looper;
 
 import com.lzx.permission.interfaces.IDialog;
 import com.lzx.permission.interfaces.IOperation;
@@ -64,9 +66,14 @@ public class PermissionsRequest {
             return this;
         }
 
-        public void request(IPermissionRequestListener requestListener, String... permissions) {
-            PermissionsRequest request = new PermissionsRequest(activity);
-            request.request(requestListener, rationalDialog, neverAskDialog, permissions);
+        public void request(final IPermissionRequestListener requestListener, final String... permissions) {
+            new Handler(Looper.getMainLooper()).post(new Runnable() {
+                @Override
+                public void run() {
+                    PermissionsRequest request = new PermissionsRequest(activity);
+                    request.request(requestListener, rationalDialog, neverAskDialog, permissions);
+                }
+            });
         }
     }
 
