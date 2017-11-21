@@ -6,5 +6,5 @@ import android.app.Activity;
  * Created by Lzx on 2017/10/12.
  */
 public interface IDialog {
-    void showDialog(Activity activity, IOperation operation, String... ungrantPermissions);
+    void showDialog(Activity activity, IOperation operation, String[] permissions, String[] ungrantPermissions);
 }

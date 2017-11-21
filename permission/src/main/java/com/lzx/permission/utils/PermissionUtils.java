@@ -1,4 +1,4 @@
-package com.lzx.permission;
+package com.lzx.permission.utils;
 
 import android.app.Activity;
 import android.content.Context;

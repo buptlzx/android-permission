@@ -4,8 +4,6 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.FragmentManager;
 import android.content.DialogInterface;
-import android.os.Handler;
-import android.os.Looper;
 
 import com.lzx.permission.interfaces.IDialog;
 import com.lzx.permission.interfaces.IOperation;
@@ -48,7 +46,7 @@ public class PermissionsRequest {
 
         Activity activity;
 
-        IDialog rationalDialog = new RationalDialog();
+        IDialog rationalDialog = new ExecutelDialog();
 
         IDialog neverAskDialog = new NeverAskDialog();
 
@@ -66,20 +64,15 @@ public class PermissionsRequest {
             return this;
         }
 
-        public void request(final IPermissionRequestListener requestListener, final String... permissions) {
-            new Handler(Looper.getMainLooper()).post(new Runnable() {
-                @Override
-                public void run() {
-                    PermissionsRequest request = new PermissionsRequest(activity);
-                    request.request(requestListener, rationalDialog, neverAskDialog, permissions);
-                }
-            });
+        public void request(IPermissionRequestListener requestListener, String... permissions) {
+            PermissionsRequest request = new PermissionsRequest(activity);
+            request.request(requestListener, rationalDialog, neverAskDialog, permissions);
         }
     }
 
     public static class ExecutelDialog implements IDialog {
         @Override
-        public void showDialog(Activity activity, IOperation operation, String... permissions) {
+        public void showDialog(Activity activity, IOperation operation, String[] permissions, String[] ungrantPermissions) {
             operation.execute();
         }
     }
@@ -87,27 +80,35 @@ public class PermissionsRequest {
     public static class CancelDialog implements IDialog {
 
         @Override
-        public void showDialog(Activity activity, IOperation operation, String... permissions) {
+        public void showDialog(Activity activity, IOperation operation, String[] permissions, String[] ungrantPermissions) {
             operation.cancel();
         }
     }
 
-    public static class RationalDialog implements IDialog {
+    public static abstract class AbsDialog implements IDialog {
+
+        protected abstract String getPermissionMessage(Activity activity, String... permissions);
+        protected abstract String getPermissionTitle(Activity activity, String... permissions);
+        protected String getPositiveText(Activity activity) {
+            return activity.getString(R.string.ok);
+        }
+        protected String getNegativeText(Activity activity) {
+            return activity.getString(R.string.cancel);
+        }
 
         @Override
-        public void showDialog(Activity activity, final IOperation operation, String... ungrantPermissions) {
-            new AlertDialog.Builder(activity)
-                    .setTitle(R.string.permissions_dialog_title)
-                    .setMessage(activity.getString(R.string.permissions_dialog_info_message,
-                            PermissionsHelper.getPermissionsInfo(activity, ungrantPermissions)))
-                    .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+        public final void showDialog(Activity activity, final IOperation operation, String[] permissions, String[] ungrantPermissions) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+            builder.setTitle(getPermissionTitle(activity, permissions))
+                    .setMessage(getPermissionMessage(activity, permissions))
+                    .setPositiveButton(getPositiveText(activity), new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             operation.execute();
                             onExecute();
                         }
                     })
-                    .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                    .setNegativeButton(getNegativeText(activity), new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             operation.cancel();
@@ -117,59 +118,46 @@ public class PermissionsRequest {
                     .setOnCancelListener(new DialogInterface.OnCancelListener() {
                         @Override
                         public void onCancel(DialogInterface dialog) {
-                            operation.cancel();
-                            RationalDialog.this.onCancel();
+                            AbsDialog.this.onCancel();
                         }
-                    })
-                    .show();
+                    }).show();
             onShow();
         }
 
         public void onShow() {}
-
         public void onExecute() {}
-
         public void onCancel() {}
     }
 
-    public static class NeverAskDialog implements IDialog {
+    public static class RationalDialog extends AbsDialog {
 
         @Override
-        public void showDialog(Activity activity, final IOperation operation, String... ungrantPermissions) {
-            new AlertDialog.Builder(activity)
-                    .setTitle(R.string.permissions_dialog_title)
-                    .setMessage(activity.getString(R.string.permissions_dialog_neverask_message,
-                            PermissionsHelper.getPermissionsInfo(activity, ungrantPermissions)))
-                    .setPositiveButton(R.string.setting, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            operation.execute();
-                            onExecute();
-                        }
-                    })
-                    .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            operation.cancel();
-                            onCancel();
-                        }
-                    })
-                    .setOnCancelListener(new DialogInterface.OnCancelListener() {
-                        @Override
-                        public void onCancel(DialogInterface dialog) {
-                            operation.cancel();
-                            NeverAskDialog.this.onCancel();
-                        }
-                    })
-                    .show();
-            onShow();
+        protected String getPermissionTitle(Activity activity, String... permissions) {
+            return activity.getString(R.string.permissions_dialog_title);
         }
 
-        public void onShow() {}
+        @Override
+        protected String getPermissionMessage(Activity activity, String... permissions) {
+            return activity.getString(R.string.permissions_dialog_info_message, PermissionsHelper.getPermissionsInfo(activity, permissions));
+        }
+    }
 
-        public void onExecute() {}
+    public static class NeverAskDialog extends AbsDialog {
 
-        public void onCancel() {}
+        @Override
+        protected String getPermissionTitle(Activity activity, String... permissions) {
+            return activity.getString(R.string.permissions_dialog_title);
+        }
+
+        @Override
+        protected String getPermissionMessage(Activity activity, String... permissions) {
+            return activity.getString(R.string.permissions_dialog_neverask_message, PermissionsHelper.getPermissionsInfo(activity, permissions));
+        }
+
+        @Override
+        protected String getPositiveText(Activity activity) {
+            return activity.getString(R.string.setting);
+        }
     }
 }
 

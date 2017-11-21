@@ -7,9 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
-import android.net.Uri;
 import android.os.Build;
-import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v4.util.SparseArrayCompat;
 import android.util.Log;
@@ -17,6 +15,7 @@ import android.util.Log;
 import com.lzx.permission.interfaces.IDialog;
 import com.lzx.permission.interfaces.IOperation;
 import com.lzx.permission.interfaces.IPermissionRequestListener;
+import com.lzx.permission.manufacture.ManufacturerManager;
 
 /**
  * Created by Lzx on 2017/10/11.
@@ -34,41 +33,45 @@ public class PermissionFragment extends Fragment {
         Log.d(TAG, "requestPermissions: ");
         final Request request = new Request(permissions, requestListener, rationDialog, neverAskDialog);
 
-        if (PermissionsHelper.hasPermissions(getActivity(), permissions)) {
+        String[] ungrant = PermissionsHelper.getUngrantPermissions(getActivity(), request.getPermissions());
+        if (ungrant.length == 0) {
             request.onPermissionsGrant();
             return;
         }
 
-        if (Build.VERSION.SDK_INT < 23) {
-            afterPermissionRequest(permissions, new int[0], request);
+        if (Build.VERSION.SDK_INT < 23 || ManufacturerManager.inst().needCheckByChecker()) {
+            showDialogForNeverAsk(request, ungrant);
             return;
         }
 
         if (PermissionsHelper.shouldShowRationale(getActivity(), permissions)) {
-            IOperation operation = new IOperation() {
-
-                @Override
-                public void execute() {
-                    doRequestPermissions(request);
-                }
-
-                @Override
-                public void cancel() {
-                    request.onPermissionDenied();
-                }
-            };
-            request.showDialogForReason(getActivity(), operation);
+            showRational(request, ungrant);
         } else {
-            doRequestPermissions(request);
+            doRequestPermissions(request, ungrant);
         }
     }
 
+    private void showRational(final Request request, final String[] ungrant) {
+        IOperation operation = new IOperation() {
+
+            @Override
+            public void execute() {
+                doRequestPermissions(request, ungrant);
+            }
+
+            @Override
+            public void cancel() {
+                request.onPermissionDenied();
+            }
+        };
+        request.showDialogForReason(getActivity(), operation, ungrant);
+    }
+
     @TargetApi(Build.VERSION_CODES.M)
-    private void doRequestPermissions(Request request) {
+    private void doRequestPermissions(Request request, String[] ungrant) {
         int requestCode = request.genPermissionRequestCode();
         Log.d(TAG, "doRequestPermissions: requestCode = " + requestCode );
         permissionRequestMap.put(requestCode, request);
-        String[] ungrant = PermissionsHelper.getUngrantPermissions(getActivity(), request.getPermissions());
         requestPermissions(ungrant, requestCode);
     }
 
@@ -101,20 +104,26 @@ public class PermissionFragment extends Fragment {
                 return;
             }
 
-            IOperation operation = new IOperation() {
-                @Override
-                public void execute() {
-                    gotoSettings(request);
-                }
-
-                @Override
-                public void cancel() {
-                    request.onPermissionDenied();
-                }
-            };
-            request.showDialogForNeverAsk(getActivity(), operation);
+            String[] ungrant = PermissionsHelper.getUngrantPermissions(getActivity(), request.getPermissions());
+            showDialogForNeverAsk(request, ungrant);
         }
     }
+
+    private void showDialogForNeverAsk(final Request request, String[] ungrant) {
+        IOperation operation = new IOperation() {
+            @Override
+            public void execute() {
+                gotoSettings(request);
+            }
+
+            @Override
+            public void cancel() {
+                request.onPermissionDenied();
+            }
+        };
+        request.showDialogForNeverAsk(getActivity(), operation, ungrant);
+    }
+
 
     private void gotoSettings(Request request) {
         try {
@@ -165,12 +174,12 @@ public class PermissionFragment extends Fragment {
             requestListener.onPermissionDenied(permissions);
         }
 
-        public void showDialogForReason(Activity activity, IOperation operation) {
-            rationalDialog.showDialog(activity, operation, PermissionsHelper.getUngrantPermissions(activity, permissions));
+        public void showDialogForReason(Activity activity, IOperation operation, String[] ungrant) {
+            rationalDialog.showDialog(activity, operation, permissions, ungrant);
         }
 
-        public void showDialogForNeverAsk(Activity activity, IOperation operation) {
-            neverAskDialog.showDialog(activity, operation, PermissionsHelper.getUngrantPermissions(activity, permissions));
+        public void showDialogForNeverAsk(Activity activity, IOperation operation, String[] ungrant) {
+            neverAskDialog.showDialog(activity, operation, permissions, ungrant);
         }
 
         public String[] getPermissions() {
@@ -192,9 +201,7 @@ public class PermissionFragment extends Fragment {
     }
 
     private static Intent getAppSettingIntent(Context context) {
-        Uri packageURI = Uri.parse("package:" + context.getPackageName());
-        Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, packageURI);
-        return intent;
+        return ManufacturerManager.inst().getPermissionSettingIntent(context);
     }
 
     private static boolean isIntentAvaliable(Context context, Intent intent) {

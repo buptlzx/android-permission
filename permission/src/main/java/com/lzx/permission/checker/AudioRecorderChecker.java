@@ -46,7 +46,6 @@ public class AudioRecorderChecker implements IChecker {
             byte[] bytes = new byte[bufferSize];
             readSize = mAudioRecord.read(bytes, 0, bytes.length);
             try {
-                mAudioRecord.stop();
                 mAudioRecord.release();
             } catch (Exception e) {
                 e.printStackTrace();

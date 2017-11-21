@@ -1,8 +1,8 @@
 apply plugin: 'maven'
 
 ext {
-    PUBLISH_GROUP_ID = 'com.lzx'
-    PUBLISH_ARTIFACT_ID = project.name
+    PUBLISH_GROUP_ID = 'com.lzx.lib'
+    PUBLISH_ARTIFACT_ID = 'android-permission'
     PUBLISH_VERSION = android.defaultConfig.versionName
 }
 

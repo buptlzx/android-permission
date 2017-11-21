@@ -6,9 +6,9 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Build;
 
-
 import com.lzx.permission.checker.PermissionCheckerManager;
-import com.lzx.permission.utils.ManufacturerUtil;
+import com.lzx.permission.manufacture.ManufacturerManager;
+import com.lzx.permission.utils.PermissionUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -58,7 +58,7 @@ public class PermissionsHelper {
         sPermissionMap.put(Manifest.permission.WRITE_EXTERNAL_STORAGE, R.string.permissions_external_storage);
     }
 
-    static String getPermissionsInfo(Context context, String... permissions) {
+    public static String getPermissionsInfo(Context context, String... permissions) {
         List<Integer> resIds = new ArrayList<>();
         for (String permission : permissions) {
             if (sPermissionMap.containsKey(permission)) {
@@ -94,7 +94,7 @@ public class PermissionsHelper {
         if (permissions == null)
             return true;
 
-        if (Build.VERSION.SDK_INT >= 23 && !ManufacturerUtil.needCheckByChecker()) {
+        if (Build.VERSION.SDK_INT >= 23 && !ManufacturerManager.inst().needCheckByChecker()) {
             return PermissionUtils.hasSelfPermissions(activity, permissions);
         } else {
             return PermissionCheckerManager.inst().check(activity, permissions);
@@ -118,7 +118,7 @@ public class PermissionsHelper {
             }
         }
 
-        if (ManufacturerUtil.needCheckByChecker()) {
+        if (ManufacturerManager.inst().needCheckByChecker()) {
             return hasPermissions(activity, permissions);
         }
         return true;
